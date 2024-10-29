@@ -17,15 +17,15 @@ const adminSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
+  // createdAt: {
+  //   type: Date,
+  //   default: Date.now,
+  // },
+  // updatedAt: {
+  //   type: Date,
+  //   default: Date.now,
+  // },
 });
 
-const User = mongoose.model("User", adminSchema);
-export default User;
+const Admin = mongoose.model("Admin", adminSchema);
+export default Admin;
