@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 mongoose.connect("mongodb+srv://admin:fvmQ1D2B6iDKmUM6@cluster0.ztkcnap.mongodb.net/SofteousAlign");
 const adminSchema = new mongoose.Schema({
+  companyname : {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true
+  },
   name: {
     type: String,
     required: true,

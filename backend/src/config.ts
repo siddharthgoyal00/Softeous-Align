@@ -1,1 +1,1 @@
-export const JWT_SECRET = "softeous-Align" ; 
+export const JWT_SECRET = "softeousAlign" ; 

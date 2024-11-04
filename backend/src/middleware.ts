@@ -17,7 +17,7 @@ export const authMiddleware = (req: any, res: any, next:any) => {
         if(req.body.adminId!=null){
             req.body.adminId = decoded.adminId;
         }else{
-            throw new Error("user id not found!")
+            throw new Error("admin id not found!")
         }
           
         next();
