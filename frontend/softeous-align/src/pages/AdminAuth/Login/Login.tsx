@@ -41,8 +41,8 @@ export const Login = () => {
                       password: password,
                     }
                   );
-                  localStorage.setItem("token", response.data.token);
-                  navigate("/AdminDashboard");
+                  localStorage.setItem("AdminToken", response.data.token);
+                  navigate("/admin-dashboard");
                 }}
                 label={"Login"}
               />
