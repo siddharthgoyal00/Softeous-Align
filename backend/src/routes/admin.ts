@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import { z } from "zod";
-import Admin from "../models/db";
+import {Admin} from "../models/db";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 
@@ -42,10 +42,10 @@ adminRouter.post("/signup", async (req: Request, res: Response) => {
       companyname: req.body.companyname,
     });
     const adminId: any = newadmin._id;
-    const token = jwt.sign({ adminId }, JWT_SECRET); // creates the jwt token using their id and the secret key
+    const adminToken = jwt.sign({ adminId }, JWT_SECRET); // creates the jwt token using their id and the secret key
     res.status(201).json({
       msg: "admin created successfully",
-      token: token,
+      token: adminToken,
     });
   } catch (error) {
     console.error("an error occured", error);
@@ -74,9 +74,9 @@ adminRouter.post("/login", async (req: Request, res: Response) => {
       password: req.body.password,
     });
     if (admin) {
-      const token = jwt.sign({ adminId: admin._id }, JWT_SECRET);
+      const adminToken = jwt.sign({ adminId: admin._id }, JWT_SECRET);
       res.json({
-        token: token,
+        token: adminToken,
       });
     }
   } catch (error) {
