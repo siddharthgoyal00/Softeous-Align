@@ -60,7 +60,7 @@ export const SignUp = () => {
                     }
                   );
                   localStorage.setItem("token", response.data.token);
-                  navigate("/AdminDashboard");
+                  navigate("/admin-dashboard");
                 }}
                 label={"Sign up"}
               />
