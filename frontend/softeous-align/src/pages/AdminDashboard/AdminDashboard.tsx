@@ -1,7 +1,9 @@
+import { SidebarAdmin } from "@/components/SidebarAdmin"
+
 export const AdminDashboard = ()=>{
-return (
+  return (
     <div>
-        Admin DashBoard
+      <SidebarAdmin></SidebarAdmin>
     </div>
-)
+  )
 }
