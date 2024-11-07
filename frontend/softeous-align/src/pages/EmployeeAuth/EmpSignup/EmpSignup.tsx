@@ -18,7 +18,7 @@ export const EmpSignUp = () => {
   const navigate = useNavigate();
   return (
     <div>
-      <div className="bg-slate-100 h-screen flex justify-center mt-8">
+      <div className="bg-gray-900 h-screen flex justify-center mt-8">
         <div className="flex flex-col justify-center">
           <div className="rounded-lg bg-white w-150 text-center p-2 h-max px-4 shadow-xl">
             <Heading label={"Create Employee"} />
