@@ -1,6 +1,6 @@
 import { FaBars } from "react-icons/fa";
 
-export function Navbar({ onClick }: any) {
+export default  function Navbar({ onClick }: any) {
   return (
     <div>
       <nav className="fixed top-0 left-0 w-full bg-gray-700 p-5 flex  justify-between">
