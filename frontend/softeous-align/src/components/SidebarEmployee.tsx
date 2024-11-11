@@ -68,10 +68,21 @@ export const SidebarEmployee: React.FC = () => {
 
   const handleNavigation = (route: string) => {
     if (route === "/home") {
-      // If logging out, remove token from localStorage
-      localStorage.removeItem("employeeToken");
+      // Check which token is present in localStorage
+      if (localStorage.getItem("AdminToken")) {
+        // If Admin is logging out
+        navigate("/admin-dashboard"); // Redirect to admin dashboard
+      } else if (localStorage.getItem("employeeToken")) {
+        // If Employee is logging out
+        localStorage.removeItem("employeeToken");
+        navigate("/home"); // Redirect to home
+      } else {
+        // Fallback to home if no token is found (additional safeguard)
+        navigate("/home");
+      }
+    } else {
+      navigate(route);
     }
-    navigate(route);
   };
 
   return (
