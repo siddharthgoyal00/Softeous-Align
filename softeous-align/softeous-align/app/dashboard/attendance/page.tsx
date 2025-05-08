@@ -13,12 +13,24 @@ import { useToast } from "@/components/ui/use-toast"
 import { AttendanceCalendar } from "@/components/attendance-calendar"
 import { AttendanceHistoryTable } from "@/components/attendance-history-table"
 
+interface AttendanceRecord {
+  _id: string
+  userId: string
+  userName: string
+  date: string
+  clockIn: string
+  clockOut: string | null
+  status: "Active" | "Completed"
+}
+
 export default function AttendancePage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [clockedIn, setClockedIn] = useState(false)
   const [clockInTime, setClockInTime] = useState<Date | null>(null)
+  const [currentAttendance, setCurrentAttendance] = useState<AttendanceRecord | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Update current time every second
   useEffect(() => {
@@ -29,96 +41,124 @@ export default function AttendancePage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Check if already clocked in today from localStorage
+  // Check if already clocked in today
   useEffect(() => {
-    const storedClockInData = localStorage.getItem("hr-platform-clock-in")
-    if (storedClockInData) {
-      const { date, time } = JSON.parse(storedClockInData)
-      const today = format(new Date(), "yyyy-MM-dd")
+    if (user) {
+      const checkAttendance = async () => {
+        try {
+          const today = format(new Date(), "yyyy-MM-dd")
+          const response = await fetch(`/api/attendance?userId=${user._id}&date=${today}`)
 
-      if (date === today) {
-        setClockedIn(true)
-        setClockInTime(new Date(time))
-      }
-    }
-  }, [])
+          if (response.ok) {
+            const data = await response.json()
+            if (data.records && data.records.length > 0) {
+              const todayRecord = data.records.find((record: AttendanceRecord) => record.date === today)
 
-  const handleClockIn = () => {
-    const now = new Date()
-    setClockInTime(now)
-    setClockedIn(true)
-
-    // Save to localStorage
-    const clockInData = {
-      date: format(now, "yyyy-MM-dd"),
-      time: now.toISOString(),
-      userId: user?.id,
-      userName: user?.name,
-    }
-
-    // Get existing attendance records
-    const existingAttendance = JSON.parse(localStorage.getItem("hr-platform-attendance") || "[]")
-
-    // Add new record
-    const newAttendance = [
-      ...existingAttendance,
-      {
-        id: Date.now().toString(),
-        userId: user?.id,
-        userName: user?.name,
-        date: format(now, "yyyy-MM-dd"),
-        clockIn: now.toISOString(),
-        clockOut: null,
-        status: "Active",
-      },
-    ]
-
-    // Save updated records
-    localStorage.setItem("hr-platform-attendance", JSON.stringify(newAttendance))
-    localStorage.setItem("hr-platform-clock-in", JSON.stringify(clockInData))
-
-    toast({
-      title: "Clocked in successfully",
-      description: `You clocked in at ${format(now, "h:mm a")}`,
-    })
-  }
-
-  const handleClockOut = () => {
-    const now = new Date()
-
-    // Get existing attendance records
-    const existingAttendance = JSON.parse(localStorage.getItem("hr-platform-attendance") || "[]")
-
-    // Find today's record for this user
-    interface AttendanceRecord {
-      userId: string
-      date: string
-      clockOut: string | null
-      [key: string]: any
-    }
-
-    const updatedAttendance = existingAttendance.map((record: AttendanceRecord) => {
-      if (record.userId === user?.id && record.date === format(new Date(), "yyyy-MM-dd") && !record.clockOut) {
-        return {
-          ...record,
-          clockOut: now.toISOString(),
-          status: "Completed",
+              if (todayRecord) {
+                setCurrentAttendance(todayRecord)
+                setClockedIn(true)
+                setClockInTime(new Date(todayRecord.clockIn))
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking attendance:", error)
         }
       }
-      return record
-    })
 
-    // Save updated records
-    localStorage.setItem("hr-platform-attendance", JSON.stringify(updatedAttendance))
-    localStorage.removeItem("hr-platform-clock-in")
+      checkAttendance()
+    }
+  }, [user])
 
-    setClockedIn(false)
-    setClockInTime(null)
+  const handleClockIn = async () => {
+    if (!user) return
 
-    toast({
-      title: "Clocked out successfully",
-      description: `You clocked out at ${format(now, "h:mm a")}`,
-    })
+    setIsLoading(true)
+    try {
+      const now = new Date()
+      const attendanceData = {
+        userId: user._id,
+        userName: user.name,
+        date: format(now, "yyyy-MM-dd"),
+        clockIn: now.toISOString(),
+      }
+
+      const response = await fetch("/api/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(attendanceData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to clock in")
+      }
+
+      const data = await response.json()
+
+      setClockInTime(now)
+      setClockedIn(true)
+      setCurrentAttendance(data.record)
+
+      toast({
+        title: "Clocked in successfully",
+        description: `You clocked in at ${format(now, "h:mm a")}`,
+      })
+    } catch (error) {
+      console.error("Clock in error:", error)
+      toast({
+        title: "Clock in failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleClockOut = async () => {
+    if (!user || !currentAttendance?._id) return
+
+    setIsLoading(true)
+    try {
+      const now = new Date()
+
+      const response = await fetch("/api/attendance", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: currentAttendance._id,
+          clockOut: now.toISOString(),
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to clock out")
+      }
+
+      setClockedIn(false)
+      setClockInTime(null)
+      setCurrentAttendance(null)
+
+      toast({
+        title: "Clocked out successfully",
+        description: `You clocked out at ${format(now, "h:mm a")}`,
+      })
+    } catch (error) {
+      console.error("Clock out error:", error)
+      toast({
+        title: "Clock out failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -137,18 +177,18 @@ export default function AttendancePage() {
 
             <div className="flex gap-4 mt-6">
               {!clockedIn ? (
-                <Button size="lg" onClick={handleClockIn} className="gap-2">
+                <Button size="lg" onClick={handleClockIn} className="gap-2" disabled={isLoading}>
                   <Clock className="h-5 w-5" />
-                  Clock In
+                  {isLoading ? "Processing..." : "Clock In"}
                 </Button>
               ) : (
                 <div className="space-y-4">
                   <div className="text-center text-sm text-muted-foreground">
                     Clocked in at {clockInTime && format(clockInTime, "h:mm a")}
                   </div>
-                  <Button size="lg" onClick={handleClockOut} className="gap-2" variant="outline">
+                  <Button size="lg" onClick={handleClockOut} className="gap-2" variant="outline" disabled={isLoading}>
                     <ClockCheck className="h-5 w-5" />
-                    Clock Out
+                    {isLoading ? "Processing..." : "Clock Out"}
                   </Button>
                 </div>
               )}
@@ -169,7 +209,7 @@ export default function AttendancePage() {
               <CardDescription>View your attendance records in calendar format</CardDescription>
             </CardHeader>
             <CardContent>
-              <AttendanceCalendar userId={user?.id} />
+              <AttendanceCalendar userId={user?._id} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -180,7 +220,7 @@ export default function AttendancePage() {
               <CardDescription>Detailed view of your attendance records</CardDescription>
             </CardHeader>
             <CardContent>
-              <AttendanceHistoryTable userId={user?.id} />
+              <AttendanceHistoryTable userId={user?._id} />
             </CardContent>
           </Card>
         </TabsContent>

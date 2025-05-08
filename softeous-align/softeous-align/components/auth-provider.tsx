@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useState, useEffect } from "react"
 
 type UserRole = "admin" | "employee" | null
 type User = {
-  id: string
+  _id: string
   name: string
   email: string
   role: UserRole
@@ -24,26 +23,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Mock users for demo purposes
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Admin User",
-    email: "admin@example.com",
-    password: "admin123", // In a real app, passwords would be hashed
-    role: "admin" as UserRole,
-  },
-  {
-    id: "2",
-    name: "John Doe",
-    email: "john@example.com",
-    password: "employee123",
-    role: "employee" as UserRole,
-    department: "Engineering",
-    position: "Senior Developer",
-  },
-]
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -55,25 +34,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(JSON.parse(savedUser))
     }
     setIsLoading(false)
+
+    // Seed initial users if needed
+    const seedUsers = async () => {
+      try {
+        await fetch("/api/seed", { method: "POST" })
+      } catch (error) {
+        console.error("Error seeding users:", error)
+      }
+    }
+
+    seedUsers()
   }, [])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-    const foundUser = MOCK_USERS.find((u) => u.email === email && u.password === password)
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Authentication failed")
+      }
 
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser
-      setUser(userWithoutPassword)
-      localStorage.setItem("hr-platform-user", JSON.stringify(userWithoutPassword))
-    } else {
-      throw new Error("Invalid email or password")
+      const data = await response.json()
+      setUser(data.user)
+      localStorage.setItem("hr-platform-user", JSON.stringify(data.user))
+    } catch (error) {
+      console.error("Login error:", error)
+      throw error
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   const logout = () => {
