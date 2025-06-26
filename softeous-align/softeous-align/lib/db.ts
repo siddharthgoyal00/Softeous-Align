@@ -190,10 +190,10 @@ export async function createEmployee(employeeData: Employee) {
   const now = new Date()
   
   const result = await db.collection(COLLECTIONS.EMPLOYEES).insertOne({
-     ...employeeData,
-     status: "Active",
-     createdAt: now,
-     updatedAt: now,
+    //  ...employeeData,
+    //  status: "Active",
+    //  createdAt: now,
+    //  updatedAt: now,
   })
   return result
 }

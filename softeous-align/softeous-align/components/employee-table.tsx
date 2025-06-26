@@ -32,8 +32,8 @@ const employees = [
   },
   {
     id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
+    name: "Aman Jain",
+    email: "aman.jain@example.com",
     department: "Marketing",
     position: "Marketing Manager",
     status: "Active",
@@ -42,8 +42,8 @@ const employees = [
   },
   {
     id: "3",
-    name: "Robert Johnson",
-    email: "robert.johnson@example.com",
+    name: "Aditya Sharma",
+    email: "aditya.sharma@example.com",
     department: "HR",
     position: "HR Specialist",
     status: "On Leave",
@@ -52,8 +52,8 @@ const employees = [
   },
   {
     id: "4",
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
+    name: "Manav Singh",
+    email: "manav.singh@example.com",
     department: "Finance",
     position: "Financial Analyst",
     status: "Active",
@@ -62,8 +62,8 @@ const employees = [
   },
   {
     id: "5",
-    name: "Michael Wilson",
-    email: "michael.wilson@example.com",
+    name: "Prince jain",
+    email: "prince.jain@example.com",
     department: "Engineering",
     position: "Frontend Developer",
     status: "Active",
